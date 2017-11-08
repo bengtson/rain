@@ -118,6 +118,7 @@ defmodule Rain.Service do
     state = %{ state | tips: new_tips}
     append_tips_to_file tips
     Rain.Status.set_update_flag
+    Rain.Drip.send_drip()
     {:reply, :ok, state}
   end
 
