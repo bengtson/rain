@@ -3,6 +3,8 @@ defmodule Rain.Fix do
   The Tack Java Rain Server was not capturing tips around Nov 2 through Nov 6
   2017. Data was taken from PWS KILEFFIN12 for those days.
 
+  Website : www.meteor.iastate.edu/~slincoln/stationdata/
+
   This program takes strange CSV data and generates tips to fill in the data
   on those days.
   """
