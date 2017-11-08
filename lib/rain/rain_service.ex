@@ -39,6 +39,9 @@ defmodule Rain.Service do
     tips =
       read_tip_log_file()
 #      |> write_rain_data
+    port = Application.fetch_env!(:rain, :rain_parms)[:port]
+    tcp_start port
+
     {:ok, %{tips: tips, tip_inches: tip_inches}}
   end
 
@@ -110,6 +113,14 @@ defmodule Rain.Service do
     {:reply, count, state}
   end
 
+  def handle_call({:add_tips, tips}, _from, state) do
+    new_tips = tips ++ state.tips
+    state = %{ state | tips: new_tips}
+    append_tips_to_file tips
+    Rain.Status.set_update_flag
+    {:reply, :ok, state}
+  end
+
 # --------- Private Support Functions
 
   # Reads the data from the old format colletor file and generates data for
@@ -145,5 +156,83 @@ defmodule Rain.Service do
     :ok = File.write filepath, write_data
     tips
   end
+
+  # ---------- TCP server
+
+  defp tcp_start port do
+    socket = start_controller_messaging(port)
+    spawn(Rain.Service, :message_accept, [socket])
+  end
+
+  def start_controller_messaging port do
+    {:ok, socket} = :gen_tcp.listen(port,
+                    [:binary, active: false, reuseaddr: true])
+    socket
+  end
+
+  def message_accept socket do
+    IO.inspect {:accept}
+    {:ok, client} = :gen_tcp.accept(socket)
+    packet = read_packet_data client, ""
+    tips = packet_to_tips packet
+    GenServer.call(RainService, {:add_tips, tips})
+    message_accept socket
+  end
+
+  def packet_to_tips packet do
+    packet
+    |> String.split("\n")
+    |> Enum.filter(fn l -> String.length(l) != 0 end)
+    |> Enum.filter(fn l -> not String.starts_with?(l, "\#") end)
+    |> Enum.map(&(String.split(&1,",")))
+    |> List.flatten
+    |> Enum.map(&(String.split(&1,"//")))
+    |> List.flatten
+    |> Enum.reject(fn(x) -> x == "rain:" end)
+    |> Enum.map(fn(x) -> {n,_} = Integer.parse(x); n end)
+    |> Enum.sort
+    |> Enum.reverse
+  end
+
+  # Added this since Elixir was first receiving just the opening
+  # `{` from the controller. This code reads until the controller
+  # closes the channel.
+  defp read_packet_data socket, packet do
+    resp = :gen_tcp.recv(socket, 0, 10000)
+    case resp do
+      {:ok, data} ->
+        packet = packet <> data
+        read_packet_data(socket, packet)
+      _ ->
+        packet
+    end
+  end
+
+  def append_tips_to_file tips do
+    tlist =
+      tips
+      |> Enum.map(fn t -> "#{t}" end)
+      |> Enum.join(",")
+    addendum = "rain://" <> tlist <> "\n"
+    filepath = Application.fetch_env!(:rain, :rain_parms)[:tip_file]
+    File.write!(filepath, addendum, [:append])
+  end
+
+
+  def test_tip do
+    packet = "rain://1510180927000,1510180951000,1510180959000\n"
+    IO.inspect {:sending_packet}
+    with  {:ok, socket} <- :gen_tcp.connect('localhost', 7575,
+                           [:binary, active: false])
+    do
+            :gen_tcp.send(socket, packet)
+            :gen_tcp.close(socket)
+            :ok
+    else
+      _ ->  :ok
+    end
+
+  end
+
 
 end

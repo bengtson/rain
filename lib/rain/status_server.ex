@@ -55,6 +55,7 @@ defmodule Rain.Status do
   end
 
   def set_update_flag do
+    IO.inspect {:setting_update_flag}
     GenServer.call StatusServer, :set_update_flag
   end
 

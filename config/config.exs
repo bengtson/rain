@@ -32,7 +32,8 @@ use Mix.Config
 # Configure Meteorologics parameters.
 config :rain, :rain_parms,
   tip_file: System.user_home() <> "/Projects/Filelif/Compendiums/Rain/tips.txt",
-  tip_inches: 0.01
+  tip_inches: 0.01,
+  host: 'localhost', port: 7575
 
 # Status server configuration
 config :rain, :status_server,
