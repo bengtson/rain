@@ -28,3 +28,12 @@ use Mix.Config
 # here (which is why it is important to import them last).
 #
 #     import_config "#{Mix.env}.exs"
+
+# Configure Meteorologics parameters.
+config :rain, :rain_parms,
+  tip_file: System.user_home() <> "/Projects/Filelif/Compendiums/Rain/tips.txt",
+  tip_inches: 0.01
+
+# Status server configuration
+config :rain, :status_server,
+  host: '10.0.1.212', port: 21200, start: :true

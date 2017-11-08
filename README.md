@@ -12,8 +12,7 @@ notification system and provides status to the Tack Status system.
 
 Following items are on the list of things to fix or features to add.
 
-  - GitHub repository.
-  - Get tip file reading working
+  - Get tip Server running.
   - Get tip additions to file working.
   - Get audio notifications working.
   - Get Tack Status updates running.
