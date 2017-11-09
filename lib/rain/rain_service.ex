@@ -128,7 +128,7 @@ defmodule Rain.Service do
     new_tips = tips ++ state.tips
     state = %{ state | tips: new_tips}
     append_tips_to_file tips
-    Rain.Status.set_update_flag
+    Rain.Status.request_update
     Rain.Drip.send_drip()
     {:reply, :ok, state}
   end
@@ -151,22 +151,6 @@ defmodule Rain.Service do
     |> Enum.map(fn(x) -> {n,_} = Integer.parse(x); n end)
     |> Enum.sort
     |> Enum.reverse
-  end
-
-  # Writes the tip data to the new format rain file.
-  defp write_rain_data tips do
-    write_data =
-      tips
-      |> Enum.reverse
-      |> Enum.map(&Integer.to_string/1)
-      |> Enum.chunk(10,10,[])
-      |> Enum.map(&(Enum.join(&1," ")))
-      |> Enum.join("\n")
-    write_data = write_data <> "\n"
-
-    filepath = Application.fetch_env!(:meteorologics, :rain_parms)[:rain_data_file]
-    :ok = File.write filepath, write_data
-    tips
   end
 
   # ---------- TCP server

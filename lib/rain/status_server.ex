@@ -35,41 +35,40 @@ defmodule Rain.Status do
     [host: host, port: port, start: _start] = Application.fetch_env!(:rain, :status_server)
     start()
     datetime = Timex.now("America/Chicago")
-    {:ok, %{parms: %{host: host, port: port, started: datetime}, server: %{}, client: %{}, update_flag: :true, status: nil, status_day: nil}}
+    {:ok, %{parms: %{host: host, port: port, started: datetime}, server: %{}, client: %{}, update_flag: :true, status: nil, day: nil}}
   end
 
   def start do
-    spawn(__MODULE__,:update_status,[])
+    spawn(__MODULE__,:update_tick,[])
   end
 
-  def set_current_status status do
-    GenServer.call StatusServer, {:set_current_status, status}
-  end
-
-  def get_current_status do
-    GenServer.call StatusServer, :get_current_status
-  end
-
-  def clear_update_flag do
-    GenServer.call StatusServer, :clear_update_flag
-  end
-
-  def set_update_flag do
+  def request_update do
     IO.inspect {:setting_update_flag}
     GenServer.call StatusServer, :set_update_flag
   end
 
-  def get_update_flag do
-    GenServer.call StatusServer, :get_update_flag
+  def update_status do
+    GenServer.call StatusServer, :update_status
   end
 
-  def handle_call({:set_current_status, status}, _from, state) do
-    state = %{ state | status: status}
-    {:reply, status, state}
-  end
-
-  def handle_call(:get_current_status, _from, state) do
-    {:reply, state.status, state}
+  def handle_call(:update_status, _from, state) do
+    IO.inspect {:checking_status}
+    day = Timex.local().day
+    status =
+      if state.update_flag || (state.day != day)
+        do
+          generate_status()
+        else
+          state.status
+      end
+    send_packet status
+    state =
+      %{ state |
+        status: status,
+        update_flag: false,
+        day: day
+      }
+    {:reply, :ok, state}
   end
 
   def handle_call(:set_update_flag, _from, state) do
@@ -77,38 +76,21 @@ defmodule Rain.Status do
     {:reply, :ok, state}
   end
 
-  def handle_call(:clear_update_flag, _from, state) do
-    state = %{ state | update_flag: false}
-    {:reply, :ok, state}
-  end
-
-  def handle_call(:get_update_flag, _from, state) do
-    flag = state.update_flag
-    {:reply, flag, state}
-  end
-
   #------------ Tack Status
-  def update_status do
+  def update_tick do
     Process.sleep(10000)
-    IO.inspect {:checking_status}
-    if get_update_flag() do generate_status() end
-    send_packet get_current_status()
     update_status()
+    update_tick()
   end
 
   def generate_status do
 
     IO.inspect {:generating_status}
 
-    # Status can include 'raining/rate', precip today, yesterday, 7 days,
-    # 30 days, ytd
-
-#    r = Rain.Metrics.summary()
-#    IO.inspect {:summary, r}
     datetime = Timex.local()
     yearstart = Timex.set(datetime, [month: 1, day: 1]) |> Timex.beginning_of_day
     days = Timex.diff(datetime |> Timex.beginning_of_day,yearstart,:days) + 1
-#    IO.inspect {:day_of_year, days}
+
     today = get_rain_for_period datetime, 0, 1
     yesterday = get_rain_for_period datetime, -1, 1
     last7days = get_rain_for_period datetime, -7, 7
@@ -137,8 +119,6 @@ defmodule Rain.Status do
       link: "http://10.0.1.202:4401"
     }
 
-    set_current_status stat
-    clear_update_flag()
     stat
   end
 
