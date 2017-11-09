@@ -115,7 +115,7 @@ defmodule Rain.Status do
     last30days = get_rain_for_period datetime, -30, 30
     ytd = get_rain_for_period yearstart, 0, days
 
-    {state, message, rate} = get_current_conditions()
+    {state, message, rate} = current_conditions()
 
     metrics =
       [
@@ -170,20 +170,40 @@ defmodule Rain.Status do
     _inches = :io_lib.format("~5.2f",[tips/100.0])
   end
 
-  defp get_current_conditions do
+  # Determines the current conditions.
+  # Looks at the last 10 tips and how quickly they came. More tips in less
+  # time determines the level of rain. 10 tips in 1 minute (6.0" / hr) is
+  # cats and dogs. 2 tips in 1 minutes is a light rain 0.6" / hr.
+  # Rate is determined by the time between the two most recent tips, if they
+  # exist.
+  @rate_window_minutes 3
+  defp current_conditions do
+
+    now_millis = 1000 * (Timex.local |> Timex.to_unix)
+    current =
+      Rain.Service.get_tips
+      |> Enum.take(10)
+      |> Enum.map(fn m -> now_millis - m end)
+      |> Enum.with_index
+      |> Enum.map(fn {m,i} -> {i,m} end)
+      |> Enum.into(%{})
+
+    # Calculate rate over last 3 minutes.
     latest = 1000 * (Timex.local |> Timex.to_unix)
-    earliest = latest - 15 * 60 * 1000
+    earliest = latest - @rate_window_minutes * 60 * 1000
     tips = Rain.Service.get_tip_count_in_range {earliest, latest}
+    rate = 0.01 * tips * 60.0 / @rate_window_minutes
+
     {state, message} =
       cond do
-        tips == 0 -> {:nominal, "Not Raining"}
-        tips > 100 -> {:alarm, "Cat and Dogs"}    # 4" / Hour
-        tips > 50  -> {:warning, "Heavy Rain"}    # 2" / Hour
-        tips > 10  -> {:warning, "Raining"}       # 0.4" / Hour
-        true       -> {:nominal, "Light Rain"}
+        current[9] < 60_000 -> {:alarm, "Cats and Dogs"}
+        current[5] < 60_000 -> {:warning, "Heaving Rain"}
+        current[2] < 60_000 -> {:warning, "Raining"}
+        current[1] < 120_000 -> {:nominal, "Light Rain"}
+        current[0] > 15 * 60 * 1000 -> {:nominal, "Not Raining"}
       end
 
-    {state, message, :io_lib.format("~5.2f",[tips*4.0/100.0])}
+    {state, message, :io_lib.format("~5.2f",[rate])}
   end
 
 end

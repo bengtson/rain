@@ -48,6 +48,13 @@ defmodule Rain.Service do
 # --------- Client APIs
 
   @doc """
+  Returns the list tips.
+  """
+  def get_tips do
+    GenServer.call RainService, :get_tips
+  end
+
+  @doc """
   Returns a list of the tips in the range specified. These are sorted from most
   recent to earliest.
   """
@@ -82,6 +89,10 @@ defmodule Rain.Service do
   end
 
 # --------- GenServer Callbacks
+
+  def handle_call(:get_tips, _from, state) do
+    {:reply, state.tips, state}
+  end
 
   @doc """
   Returns the first and last tips in the data file.

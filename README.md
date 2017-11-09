@@ -12,9 +12,6 @@ notification system and provides status to the Tack Status system.
 
 Following items are on the list of things to fix or features to add.
 
-  - Get tip Server running.
-  - Get tip additions to file working.
-  - Get audio notifications working.
   - ExDoc complete.
 
 ## Installation
