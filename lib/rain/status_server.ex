@@ -180,7 +180,7 @@ defmodule Rain.Status do
         current[5] < 60_000 -> {:warning, "Heaving Rain"}
         current[2] < 60_000 -> {:warning, "Raining"}
         current[1] < 120_000 -> {:nominal, "Light Rain"}
-        current[0] > 15 * 60 * 1000 -> {:nominal, "Not Raining"}
+        true -> {:nominal, "Not Raining"}
       end
 
     {state, message, :io_lib.format("~5.2f",[rate])}

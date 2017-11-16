@@ -140,17 +140,7 @@ defmodule Rain.Service do
   defp read_tip_log_file do
     filepath = Application.fetch_env!(:rain, :rain_parms)[:tip_file]
     File.read!(filepath)
-    |> String.split("\n")
-    |> Enum.filter(fn l -> String.length(l) != 0 end)
-    |> Enum.filter(fn l -> not String.starts_with?(l, "\#") end)
-    |> Enum.map(&(String.split(&1,",")))
-    |> List.flatten
-    |> Enum.map(&(String.split(&1,"//")))
-    |> List.flatten
-    |> Enum.reject(fn(x) -> x == "rain:" end)
-    |> Enum.map(fn(x) -> {n,_} = Integer.parse(x); n end)
-    |> Enum.sort
-    |> Enum.reverse
+    |> packet_to_tips
   end
 
   # ---------- TCP server
@@ -212,22 +202,6 @@ defmodule Rain.Service do
     addendum = "rain://" <> tlist <> "\n"
     filepath = Application.fetch_env!(:rain, :rain_parms)[:tip_file]
     File.write!(filepath, addendum, [:append])
-  end
-
-
-  def test_tip do
-    packet = "rain://1510180927000,1510180951000,1510180959000\n"
-    IO.inspect {:sending_packet}
-    with  {:ok, socket} <- :gen_tcp.connect('localhost', 7575,
-                           [:binary, active: false])
-    do
-            :gen_tcp.send(socket, packet)
-            :gen_tcp.close(socket)
-            :ok
-    else
-      _ ->  :ok
-    end
-
   end
 
 

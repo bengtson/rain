@@ -7,8 +7,13 @@ defmodule Rain.Fix do
 
   This program takes strange CSV data and generates tips to fill in the data
   on those days.
+
+  Data for those days was generated and then placed by hand into the rain
+  gauge tip file.
+
+  Data files are included in the package in case they are needed.
   """
-  @rain_data_path "/Users/bengm0ra/Desktop/rain/"
+  @rain_data_path "priv/fix data/"
 
   def fix do
 
