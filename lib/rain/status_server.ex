@@ -176,10 +176,10 @@ defmodule Rain.Status do
 
     {state, message} =
       cond do
-        current[9] < 60_000 -> {:alarm, "Cats and Dogs"}
-        current[5] < 60_000 -> {:warning, "Heaving Rain"}
-        current[2] < 60_000 -> {:warning, "Raining"}
-        current[1] < 120_000 -> {:nominal, "Light Rain"}
+        current[9] < 60_000 -> {:alarm, "Cats and Dogs"}    # 6.0 in / hr
+        current[5] < 60_000 -> {:warning, "Heaving Rain"}   # 3.0 in / hr
+        current[2] < 60_000 -> {:warning, "Raining"}        # 1.2 in / hr
+        current[1] < 120_000 -> {:nominal, "Light Rain"}    # 0.6 in / hr
         true -> {:nominal, "Not Raining"}
       end
 
