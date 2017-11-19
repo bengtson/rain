@@ -179,7 +179,8 @@ defmodule Rain.Status do
         current[9] < 60_000 -> {:alarm, "Cats and Dogs"}    # 6.0 in / hr
         current[5] < 60_000 -> {:warning, "Heaving Rain"}   # 3.0 in / hr
         current[2] < 60_000 -> {:warning, "Raining"}        # 1.2 in / hr
-        current[1] < 120_000 -> {:nominal, "Light Rain"}    # 0.6 in / hr
+        current[1] < 300_000 -> {:nominal, "Rain"}          # 0.24 in / hr
+        current[1] < 600_000 -> {:nominal, "Light Rain"}    # 0.12 in / hr
         true -> {:nominal, "Not Raining"}
       end
 
