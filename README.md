@@ -14,6 +14,7 @@ Following items are on the list of things to fix or features to add.
 
   - Add ability for the server to respond to a meteorologics request.
   - ExDoc complete.
+  - Wrong documentation for module rain_service. Service handles tips directly from the gauge, not from the iMac.
 
 ## Installation
 

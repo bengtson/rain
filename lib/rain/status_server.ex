@@ -93,8 +93,8 @@ defmodule Rain.Status do
 
     today = get_rain_for_period datetime, 0, 1
     yesterday = get_rain_for_period datetime, -1, 1
-    last7days = get_rain_for_period datetime, -7, 7
-    last30days = get_rain_for_period datetime, -30, 30
+    last7days = get_rain_for_period datetime, -6, 7
+    last30days = get_rain_for_period datetime, -29, 30
     ytd = get_rain_for_period yearstart, 0, days
 
     {state, message, rate} = current_conditions()
@@ -181,6 +181,7 @@ defmodule Rain.Status do
         current[2] < 60_000 -> {:warning, "Raining"}        # 1.2 in / hr
         current[1] < 300_000 -> {:nominal, "Rain"}          # 0.24 in / hr
         current[1] < 600_000 -> {:nominal, "Light Rain"}    # 0.12 in / hr
+        current[0] < 180_000 -> {:nominal, "Recent Tip"}
         true -> {:nominal, "Not Raining"}
       end
 
