@@ -89,8 +89,8 @@ defmodule Rain.Status do
 
     datetime = Timex.local()
     yearstart = Timex.set(datetime, [month: 1, day: 1]) |> Timex.beginning_of_day
-    days = Timex.diff(datetime |> Timex.beginning_of_day,yearstart,:days) + 1
-
+#    days = Timex.diff(datetime |> Timex.beginning_of_day,yearstart,:days) + 1
+    days = Timex.day(datetime)
     today = get_rain_for_period datetime, 0, 1
     yesterday = get_rain_for_period datetime, -1, 1
     last7days = get_rain_for_period datetime, -6, 7
